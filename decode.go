@@ -268,7 +268,38 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 			panic(fmt.Errorf("nbt: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
 		}
 
-	// cast TAG_Int_Array:
+	case TAG_Int_Array:
+		var length uint32
+		d.r(&length)
+
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice:
+			if v.Kind() == reflect.Array {
+				if uint32(v.Len()) < length {
+					panic(fmt.Errorf("nbt: Int array is of length %d, but only the array given is only %d long!", length, v.Len()))
+				}
+			} else {
+				if uint32(v.Cap()) < length {
+					v.Set(reflect.MakeSlice(v.Type(), 0, int(length)))
+				}
+			}
+			slice := v.Slice(0, 0)
+
+			kind := v.Type().Elem()
+
+			for i := uint32(0); i < length; i++ {
+				value := reflect.New(kind).Elem()
+				d.readValue(TAG_Int, value)
+				slice.Set(reflect.Append(slice, value))
+			}
+
+			if v.Kind() == reflect.Slice {
+				v.Set(slice)
+			}
+
+		default:
+			panic(fmt.Errorf("nbt: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
+		}
 
 	default:
 		panic(fmt.Errorf("nbt: Unhandled tag: %s", tag))
