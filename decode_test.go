@@ -1,12 +1,11 @@
 package nbt
 
 import (
-	"testing"
 	"os"
+	"testing"
 )
 
 type ServerList struct {
-	
 }
 
 func TestServerList(t *testing.T) {
@@ -16,7 +15,7 @@ func TestServerList(t *testing.T) {
 	}
 	defer f.Close()
 
-        var list ServerList
+	var list ServerList
 
 	err = Unmarshal(Uncompressed, f, &list)
 	if err != nil {
