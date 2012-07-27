@@ -49,7 +49,7 @@ func (tag Tag) String() string {
 	case TAG_Int_Array:
 		name = "TAG_Int_Array"
 	}
-	return fmt.Sprintf("%s (0x%02x)", name, tag)
+	return fmt.Sprintf("%s (0x%02x)", name, byte(tag))
 }
 
 type Compression byte
