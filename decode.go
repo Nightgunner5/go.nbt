@@ -222,8 +222,15 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 			}
 			kind := v.Type().Elem()
 
-			for i := uint32(0); i < length; i++ {
-				value := reflect.Zero(kind)
+			var i uint32
+			defer func() {
+				if r := recover(); r != nil {
+					panic(fmt.Errorf("%v\n\t\tat list index %d", r, i))
+				}
+			}()
+
+			for i = 0; i < length; i++ {
+				value := reflect.New(kind).Elem()
 				d.readValue(inner, value)
 				v.Set(reflect.Append(v, value))
 			}
@@ -237,15 +244,23 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 		case reflect.Struct:
 			fields := parseStruct(v)
 
+			var name string
+			defer func() {
+				if r := recover(); r != nil {
+					panic(fmt.Errorf("%v\n\t\tat struct field %#v", r, name))
+				}
+			}()
+
 			for {
-				name, tag := d.readTag()
+				var tag Tag
+				name, tag = d.readTag()
 				if tag == TAG_End {
 					break
 				}
 				if field, ok := fields[name]; ok {
 					d.readValue(tag, field)
 				} else {
-					panic(fmt.Errorf("nbt: Unhandled %s field %s", tag, name))
+					panic(fmt.Errorf("nbt: Unhandled %s", tag))
 				}
 			}
 
