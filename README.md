@@ -51,3 +51,19 @@ func ReadExample1(in io.Reader) (Example1, error) {
 	return out, err
 }
 ```
+
+Example 2
+=========
+
+What if we tried to read with a missing or incorrect field? Instead of silently ignoring the problem or
+saying "oops, there was an error" and not giving any information, there's a stack trace and a readable
+error message. For example, what if the elements of Example1.Children have an additional field "Index"?
+
+Here's the error that would be returned:
+
+```
+nbt: Unhandled TAG_Int (0x03)
+		at struct field "Index"
+		at list index 0
+		at struct field "Children"
+```
