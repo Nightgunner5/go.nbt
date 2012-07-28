@@ -80,6 +80,34 @@ func (d *decodeState) readTag() (string, Tag) {
 	return name, tag
 }
 
+func (d *decodeState) allocate(tag Tag) reflect.Value {
+	switch tag {
+	case TAG_Byte:
+		return reflect.ValueOf(new(int8)).Elem()
+	case TAG_Short:
+		return reflect.ValueOf(new(int16)).Elem()
+	case TAG_Int:
+		return reflect.ValueOf(new(int32)).Elem()
+	case TAG_Long:
+		return reflect.ValueOf(new(int64)).Elem()
+	case TAG_Float:
+		return reflect.ValueOf(new(float32)).Elem()
+	case TAG_Double:
+		return reflect.ValueOf(new(float64)).Elem()
+	case TAG_Byte_Array:
+		return reflect.ValueOf(new([]byte)).Elem()
+	case TAG_String:
+		return reflect.ValueOf(new(string)).Elem()
+	case TAG_List:
+		return reflect.ValueOf(new([]interface{})).Elem()
+	case TAG_Compound:
+		return reflect.ValueOf(new(map[string]interface{})).Elem()
+	case TAG_Int_Array:
+		return reflect.ValueOf(new([]int32)).Elem()
+	}
+	panic(fmt.Errorf("nbt: Unhandled tag %s", tag))
+}
+
 func (d *decodeState) readString() string {
 	var length uint16
 	d.r(&length)
@@ -97,6 +125,9 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 	switch v.Kind() {
 	case reflect.Int, reflect.Uint:
 		panic(fmt.Errorf("nbt: int and uint types are not supported for portability reasons. Try int32 or uint32."))
+	case reflect.Interface:
+		v.Set(d.allocate(tag))
+		v = v.Elem()
 	}
 
 	switch tag {
@@ -230,7 +261,12 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 			}()
 
 			for i = 0; i < length; i++ {
-				value := reflect.New(kind).Elem()
+				var value reflect.Value
+				if kind.Kind() == reflect.Interface {
+					value = d.allocate(inner)
+				} else {
+					value = reflect.New(kind).Elem()
+				}
 				d.readValue(inner, value)
 				v.Set(reflect.Append(v, value))
 			}
@@ -262,6 +298,29 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 				} else {
 					panic(fmt.Errorf("nbt: Unhandled %s", tag))
 				}
+			}
+
+		case reflect.Map:
+			if v.IsNil() {
+				v.Set(reflect.ValueOf(make(map[string]interface{})))
+			}
+
+			var name string
+			defer func() {
+				if r := recover(); r != nil {
+					panic(fmt.Errorf("%v\n\t\tat struct field %#v", r, name))
+				}
+			}()
+
+			for {
+				var tag Tag
+				name, tag = d.readTag()
+				if tag == TAG_End {
+					break
+				}
+				val := d.allocate(tag)
+				d.readValue(tag, val)
+				v.SetMapIndex(reflect.ValueOf(name), val)
 			}
 
 		default:

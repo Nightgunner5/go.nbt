@@ -49,6 +49,68 @@ func TestServerList(t *testing.T) {
 	assertString(t, "Servers[2].IP", list.Servers[2].IP, "snow.man")
 }
 
+type MapServerList struct {
+	Servers []map[string]interface{} `nbt:"servers"`
+}
+
+func TestMapDecode(t *testing.T) {
+	f, err := os.Open("testcases/servers.dat")
+	if err != nil {
+		t.Error(err)
+	}
+	defer f.Close()
+
+	var list MapServerList
+
+	err = Unmarshal(Uncompressed, f, &list)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(list.Servers) != 3 {
+		t.Errorf("Server list length is %d, but expected 3.", len(list.Servers))
+	}
+
+	assertString(t, "Servers[0].Name", list.Servers[0]["name"].(string), "Who")
+	assertString(t, "Servers[0].IP", list.Servers[0]["ip"].(string), "what.invalid")
+
+	assertString(t, "Servers[1].Name", list.Servers[1]["name"].(string), "Where")
+	assertString(t, "Servers[1].IP", list.Servers[1]["ip"].(string), "when:12345")
+
+	assertString(t, "Servers[2].Name", list.Servers[2]["name"].(string), "☃")
+	assertString(t, "Servers[2].IP", list.Servers[2]["ip"].(string), "snow.man")
+}
+
+func TestMapDecode2(t *testing.T) {
+	f, err := os.Open("testcases/servers.dat")
+	if err != nil {
+		t.Error(err)
+	}
+	defer f.Close()
+
+	var list map[string]interface{}
+
+	err = Unmarshal(Uncompressed, f, &list)
+	if err != nil {
+		t.Error(err)
+	}
+
+	servers := list["servers"].([]interface{})
+
+	if len(servers) != 3 {
+		t.Errorf("Server list length is %d, but expected 3.", len(servers))
+	}
+
+	assertString(t, "Servers[0].Name", servers[0].(map[string]interface{})["name"].(string), "Who")
+	assertString(t, "Servers[0].IP", servers[0].(map[string]interface{})["ip"].(string), "what.invalid")
+
+	assertString(t, "Servers[1].Name", servers[1].(map[string]interface{})["name"].(string), "Where")
+	assertString(t, "Servers[1].IP", servers[1].(map[string]interface{})["ip"].(string), "when:12345")
+
+	assertString(t, "Servers[2].Name", servers[2].(map[string]interface{})["name"].(string), "☃")
+	assertString(t, "Servers[2].IP", servers[2].(map[string]interface{})["ip"].(string), "snow.man")
+}
+
 type EmptyServerList struct {
 }
 

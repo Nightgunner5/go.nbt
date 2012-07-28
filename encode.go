@@ -149,6 +149,11 @@ func writeTag(out io.Writer, name string, v reflect.Value) {
 		writeValue(out, TAG_String, name)
 		writeList(out, v)
 
+	case reflect.Map:
+		w(out, TAG_Compound)
+		writeValue(out, TAG_String, name)
+		writeMap(out, v)
+
 	case reflect.Struct:
 		w(out, TAG_Compound)
 		writeValue(out, TAG_String, name)
@@ -186,6 +191,7 @@ func writeValue(out io.Writer, tag Tag, v interface{}) {
 func writeList(out io.Writer, v reflect.Value) {
 	var tag Tag
 	mustConvertBool := false
+	mustConvertMap := false
 	switch v.Type().Elem().Kind() {
 	case reflect.Bool:
 		mustConvertBool = true
@@ -226,6 +232,9 @@ func writeList(out io.Writer, v reflect.Value) {
 	case reflect.Slice:
 		tag = TAG_List
 
+	case reflect.Map:
+		mustConvertMap = true
+		fallthrough
 	case reflect.Struct:
 		tag = TAG_Compound
 
@@ -249,7 +258,11 @@ func writeList(out io.Writer, v reflect.Value) {
 				writeValue(out, TAG_Byte, uint8(0))
 			}
 		} else if tag == TAG_Compound {
-			writeCompound(out, v.Index(i))
+			if mustConvertMap {
+				writeMap(out, v.Index(i))
+			} else {
+				writeCompound(out, v.Index(i))
+			}
 		} else if tag == TAG_List {
 			writeList(out, v.Index(i))
 		} else if tag == TAG_Byte_Array {
@@ -262,6 +275,13 @@ func writeList(out io.Writer, v reflect.Value) {
 			writeValue(out, tag, v.Index(i).Interface())
 		}
 	}
+}
+
+func writeMap(out io.Writer, v reflect.Value) {
+	for _, name := range v.MapKeys() {
+		writeTag(out, name.String(), v.MapIndex(name))
+	}
+	w(out, TAG_End)
 }
 
 func writeCompound(out io.Writer, v reflect.Value) {
