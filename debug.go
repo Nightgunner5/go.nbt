@@ -52,6 +52,7 @@ func (d *debugState) printf(indent int, format string, args ...interface{}) {
 func (d *debugState) debug(indent int) bool {
 	name, tag := d.readTag()
 	if tag == TAG_End {
+		d.printf(indent, "%s", tag)
 		return false
 	}
 	d.printf(indent, "%s named [%d] %s:", tag, len(name), name)
