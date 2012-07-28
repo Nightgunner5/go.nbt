@@ -19,6 +19,9 @@ func parseStruct(v reflect.Value) map[string]reflect.Value {
 		if tag := f.Tag.Get("nbt"); tag != "" {
 			name = tag
 		}
+		if name == "-" {
+			continue
+		}
 
 		if _, exists := parsed[name]; exists {
 			panic(fmt.Errorf("Multiple fields with name %#v", name))
