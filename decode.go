@@ -206,24 +206,24 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 		d.r(&length)
 
 		switch v.Kind() {
-		case reflect.Array:
-			if uint32(v.Len()) < length {
-				panic(fmt.Errorf("nbt: Byte array is of length %d, but only the array given is only %d long!", length, v.Len()))
+		case reflect.Array, reflect.Slice:
+			if v.Kind() == reflect.Array {
+				if uint32(v.Len()) < length {
+					panic(fmt.Errorf("nbt: Byte array is of length %d, but only the array given is only %d long!", length, v.Len()))
+				}
+			} else {
+				if uint32(v.Cap()) < length {
+					v.Set(reflect.MakeSlice(v.Type(), 0, int(length)))
+				}
 			}
+			slice := v.Slice(0, 0)
 
-			_, err := d.in.Read(v.Slice(0, int(length)).Bytes())
-			if err != nil {
-				panic(err)
-			}
+			kind := v.Type().Elem()
 
-		case reflect.Slice:
-			if uint32(v.Cap()) < length {
-				v.Set(reflect.MakeSlice(v.Type(), int(length), int(length)))
-			}
-
-			_, err := d.in.Read(v.Slice(0, int(length)).Bytes())
-			if err != nil {
-				panic(err)
+			for i := uint32(0); i < length; i++ {
+				value := reflect.New(kind).Elem()
+				d.readValue(TAG_Byte, value)
+				reflect.Append(slice, value)
 			}
 
 		default:

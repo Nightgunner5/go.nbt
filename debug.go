@@ -131,11 +131,8 @@ func (d *debugState) debugValue(indent int, tag Tag) {
 		d.r(&length)
 		value := make([]byte, length)
 		d.printf(indent, "Length: %d (0x%08x)", length, length)
-		if length < 20 {
-			d.printf(indent, "Value: %#v", value)
-		} else {
-			d.printf(indent, "First 20 values: %#v", value[:20])
-		}
+		d.in.Read(value)
+		d.printf(indent, "Value: %#v", value)
 
 	case TAG_String:
 		value := d.readString()
