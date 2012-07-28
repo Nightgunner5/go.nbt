@@ -349,11 +349,7 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 			for i := uint32(0); i < length; i++ {
 				value := reflect.New(kind).Elem()
 				d.readValue(TAG_Int, value)
-				slice.Set(reflect.Append(slice, value))
-			}
-
-			if v.Kind() == reflect.Slice {
-				v.Set(slice)
+				reflect.Append(slice, value)
 			}
 
 		default:
