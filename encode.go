@@ -56,6 +56,7 @@ func w(out io.Writer, v interface{}) {
 }
 
 func writeTag(out io.Writer, name string, v reflect.Value) {
+	v = reflect.Indirect(v)
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Errorf("%v\n\t\tat struct field %#v", r, name))
