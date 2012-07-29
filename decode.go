@@ -128,6 +128,9 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 	case reflect.Interface:
 		v.Set(d.allocate(tag))
 		v = v.Elem()
+	case reflect.Ptr:
+		v.Set(reflect.New(v.Type().Elem()))
+		v = v.Elem()
 	}
 
 	switch tag {
@@ -258,12 +261,17 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 
 			for i = 0; i < length; i++ {
 				var value reflect.Value
-				if kind.Kind() == reflect.Interface {
-					value = d.allocate(inner)
+				if kind.Kind() == reflect.Ptr {
+					value = reflect.New(kind.Elem())
+					d.readValue(inner, value.Elem())
 				} else {
-					value = reflect.New(kind).Elem()
+					if kind.Kind() == reflect.Interface {
+						value = d.allocate(inner)
+					} else {
+						value = reflect.New(kind).Elem()
+					}
+					d.readValue(inner, value)
 				}
-				d.readValue(inner, value)
 				v.Set(reflect.Append(v, value))
 			}
 

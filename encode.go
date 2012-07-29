@@ -56,6 +56,7 @@ func w(out io.Writer, v interface{}) {
 }
 
 func writeTag(out io.Writer, name string, v reflect.Value) {
+	v = reflect.Indirect(v)
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Errorf("%v\n\t\tat struct field %#v", r, name))
@@ -189,6 +190,7 @@ func writeValue(out io.Writer, tag Tag, v interface{}) {
 }
 
 func writeList(out io.Writer, v reflect.Value) {
+	v = reflect.Indirect(v)
 	var tag Tag
 	mustConvertBool := false
 	mustConvertMap := false
@@ -279,12 +281,13 @@ func writeList(out io.Writer, v reflect.Value) {
 
 func writeMap(out io.Writer, v reflect.Value) {
 	for _, name := range v.MapKeys() {
-		writeTag(out, name.String(), v.MapIndex(name))
+		writeTag(out, name.String(), reflect.Indirect(v.MapIndex(name)))
 	}
 	w(out, TAG_End)
 }
 
 func writeCompound(out io.Writer, v reflect.Value) {
+	v = reflect.Indirect(v)
 	fields := parseStruct(v)
 
 	for name, value := range fields {

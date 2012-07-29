@@ -27,7 +27,7 @@ func parseStruct(v reflect.Value) map[string]reflect.Value {
 			panic(fmt.Errorf("Multiple fields with name %#v", name))
 		}
 
-		parsed[name] = v.Field(i)
+		parsed[name] = reflect.Indirect(v.Field(i))
 	}
 
 	return parsed
