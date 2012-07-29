@@ -131,7 +131,7 @@ func writeTag(out io.Writer, name string, v reflect.Value) {
 		case reflect.Uint8:
 			w(out, TAG_Byte_Array)
 			writeValue(out, TAG_String, name)
-			writeValue(out, TAG_Byte_Array, v.Bytes())
+			writeValue(out, TAG_Byte_Array, v.Slice(0, v.Len()).Bytes())
 
 		case reflect.Int32, reflect.Uint32:
 			w(out, TAG_Int_Array)
