@@ -56,7 +56,6 @@ func w(out io.Writer, v interface{}) {
 }
 
 func writeTag(out io.Writer, name string, v reflect.Value) {
-	v = reflect.Indirect(v)
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Errorf("%v\n\t\tat struct field %#v", r, name))
@@ -190,7 +189,6 @@ func writeValue(out io.Writer, tag Tag, v interface{}) {
 }
 
 func writeList(out io.Writer, v reflect.Value) {
-	v = reflect.Indirect(v)
 	var tag Tag
 	mustConvertBool := false
 	mustConvertMap := false
@@ -240,6 +238,9 @@ func writeList(out io.Writer, v reflect.Value) {
 	case reflect.Struct:
 		tag = TAG_Compound
 
+	case reflect.Ptr: // TODO: Is there ever a case where TAG_Compound would be wrong here?
+		tag = TAG_Compound
+
 	default:
 		panic(fmt.Errorf("nbt: Unhandled list element type: %v", v.Type().Elem()))
 	}
@@ -263,7 +264,7 @@ func writeList(out io.Writer, v reflect.Value) {
 			if mustConvertMap {
 				writeMap(out, v.Index(i))
 			} else {
-				writeCompound(out, v.Index(i))
+				writeCompound(out, reflect.Indirect(v.Index(i)))
 			}
 		} else if tag == TAG_List {
 			writeList(out, v.Index(i))
