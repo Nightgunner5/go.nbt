@@ -62,6 +62,9 @@ func writeTag(out io.Writer, name string, v reflect.Value) {
 			panic(fmt.Errorf("%v\n\t\tat struct field %#v", r, name))
 		}
 	}()
+	for v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
 	switch v.Kind() {
 	case reflect.Bool:
 		w(out, TAG_Byte)
