@@ -19,6 +19,7 @@ const (
 	TAG_List       Tag = 9  // tagID TAG_Byte, length TAG_Int, then payload [length]tagID.
 	TAG_Compound   Tag = 10 // { tagID TAG_Byte, name TAG_String, payload tagID }... TAG_End
 	TAG_Int_Array  Tag = 11 // size TAG_Int, then payload [size]TAG_Int
+	TAG_Long_Array Tag = 12
 )
 
 func (tag Tag) String() string {
@@ -48,6 +49,8 @@ func (tag Tag) String() string {
 		name = "TAG_Compound"
 	case TAG_Int_Array:
 		name = "TAG_Int_Array"
+	case TAG_Long_Array:
+		name = "TAG_Long_Array"
 	}
 	return fmt.Sprintf("%s (0x%02x)", name, byte(tag))
 }

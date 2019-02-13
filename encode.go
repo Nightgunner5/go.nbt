@@ -144,6 +144,13 @@ func writeTag(out io.Writer, name string, v reflect.Value) {
 				writeValue(out, TAG_Int, v.Index(i).Interface())
 			}
 
+		case reflect.Int64, reflect.Uint64:
+			w(out, TAG_Long_Array)
+			writeValue(out, TAG_String, name)
+			for i := 0; i < v.Len(); i++ {
+				writeValue(out, TAG_Long, v.Index(i).Interface())
+			}
+
 		default:
 			panic(fmt.Errorf("nbt: Unhandled array type: %v", v.Type().Elem()))
 		}
@@ -229,6 +236,9 @@ func writeList(out io.Writer, v reflect.Value) {
 		case reflect.Int32, reflect.Uint32:
 			tag = TAG_Int_Array
 
+		case reflect.Int64, reflect.Uint64:
+			tag = TAG_Long_Array
+
 		default:
 			panic(fmt.Errorf("nbt: Unhandled array type: %v", v.Type().Elem().Elem()))
 		}
@@ -277,6 +287,10 @@ func writeList(out io.Writer, v reflect.Value) {
 		} else if tag == TAG_Int_Array {
 			for j := 0; j < v.Index(i).Len(); j++ {
 				writeValue(out, TAG_Int, v.Index(i).Index(j).Interface())
+			}
+		} else if tag == TAG_Long_Array {
+			for j := 0; j < v.Index(i).Len(); j++ {
+				writeValue(out, TAG_Long, v.Index(i).Index(j).Interface())
 			}
 		} else {
 			writeValue(out, tag, v.Index(i).Interface())

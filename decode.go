@@ -104,6 +104,8 @@ func (d *decodeState) allocate(tag Tag) reflect.Value {
 		return reflect.ValueOf(new(map[string]interface{})).Elem()
 	case TAG_Int_Array:
 		return reflect.ValueOf(new([]int32)).Elem()
+	case TAG_Long_Array:
+		return reflect.ValueOf(new([]int64)).Elem()
 	}
 	panic(fmt.Errorf("nbt: Unhandled tag %s", tag))
 }
@@ -355,7 +357,30 @@ func (d *decodeState) readValue(tag Tag, v reflect.Value) {
 		default:
 			panic(fmt.Errorf("nbt: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
 		}
+	case TAG_Long_Array:
+		var length uint32
+		d.r(&length)
 
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice:
+			if v.Kind() == reflect.Array {
+				if uint32(v.Len()) < length {
+					panic(fmt.Errorf("nbt: Int array is of length %d, but only the array given is only %d long!", length, v.Len()))
+				}
+			} else {
+				if uint32(v.Len()) < length {
+					v.Set(reflect.MakeSlice(v.Type(), int(length), int(length)))
+				}
+			}
+
+			for i := 0; i < int(length); i++ {
+				value := v.Index(i)
+				d.readValue(TAG_Long, value)
+			}
+
+		default:
+			panic(fmt.Errorf("nbt: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
+		}
 	default:
 		panic(fmt.Errorf("nbt: Unhandled tag: %s", tag))
 	}

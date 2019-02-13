@@ -46,7 +46,7 @@ func (d *debugState) init(compression Compression, in io.Reader) *debugState {
 }
 
 func (d *debugState) printf(indent int, format string, args ...interface{}) {
-	fmt.Printf(fmt.Sprintf(fmt.Sprintf("%% %ds%%s\n", indent * 4), " ", format), args...)
+	fmt.Printf(fmt.Sprintf(fmt.Sprintf("%% %ds%%s\n", indent*4), " ", format), args...)
 }
 
 func (d *debugState) debug(indent int) bool {
@@ -56,7 +56,7 @@ func (d *debugState) debug(indent int) bool {
 		return false
 	}
 	d.printf(indent, "%s named [%d] %s:", tag, len(name), name)
-	d.debugValue(indent + 1, tag)
+	d.debugValue(indent+1, tag)
 	return true
 }
 
@@ -104,17 +104,17 @@ func (d *debugState) debugValue(indent int, tag Tag) {
 	case TAG_Short:
 		var value uint16
 		d.r(&value)
-		                d.printf(indent, "0x%04x", value)
+		d.printf(indent, "0x%04x", value)
 
 	case TAG_Int:
 		var value uint32
 		d.r(&value)
-		                d.printf(indent, "0x%08x", value)
+		d.printf(indent, "0x%08x", value)
 
 	case TAG_Long:
 		var value uint64
 		d.r(&value)
-		                d.printf(indent, "0x%016x", value)
+		d.printf(indent, "0x%016x", value)
 
 	case TAG_Float:
 		var value float32
@@ -124,7 +124,7 @@ func (d *debugState) debugValue(indent int, tag Tag) {
 	case TAG_Double:
 		var value float64
 		d.r(&value)
-		                d.printf(indent, "%#v", value)
+		d.printf(indent, "%#v", value)
 
 	case TAG_Byte_Array:
 		var length uint32
@@ -150,7 +150,7 @@ func (d *debugState) debugValue(indent int, tag Tag) {
 		d.printf(indent, "Value: {")
 
 		for i := uint32(0); i < length; i++ {
-			d.debugValue(indent + 1, inner)
+			d.debugValue(indent+1, inner)
 		}
 
 		d.printf(indent, "}")
@@ -167,7 +167,17 @@ func (d *debugState) debugValue(indent int, tag Tag) {
 		d.printf(indent, "Length: %d", length)
 		d.printf(indent, "Values: {")
 		for i := uint32(0); i < length; i++ {
-			d.debugValue(indent + 1, TAG_Int)
+			d.debugValue(indent+1, TAG_Int)
+		}
+		d.printf(indent, "}")
+
+	case TAG_Long_Array:
+		var length uint32
+		d.r(&length)
+		d.printf(indent, "Length: %d", length)
+		d.printf(indent, "Values: {")
+		for i := uint32(0); i < length; i++ {
+			d.debugValue(indent+1, TAG_Long)
 		}
 		d.printf(indent, "}")
 
